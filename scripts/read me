@@ -1,5 +1,0 @@
-File #1, reading_data.R: reading and treating data
-File #2, minimal_m.R: styding the minimum degree
-File #3, script_analysis.R / model_growth_study.R: fitting model / JAGS model
-File #4, degree_elevation_methods.R / analysis_comparison_measures.R: degree selection methods / analyzing regular comparison measures
-File #5, probability_change_behavior.R: evaluating posterior probabilities of change in the behavior of the target function
