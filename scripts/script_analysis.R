@@ -23,10 +23,10 @@ set.seed(123456789)
 # require(data.table)
 library(dplyr)
 library(ggplot2)
-# require(mcmcplots)
-# require(MCMCvis)
-# require(mvtnorm)
-# require(R2jags)
+library(mcmcplots)
+# library(MCMCvis)
+require(mvtnorm)
+require(R2jags)
 
 ###-------------------------------
 ###   Working directories
@@ -35,6 +35,7 @@ library(ggplot2)
 directory <- paste0(getwd(), "\\")
 data_directory <- paste0(directory, "data\\")
 figures_directory <- paste0(directory, "figures\\")
+model_directory <- paste0(directory, "model\\")
 tables_directory <- paste0(directory, "tables\\")
 
 ###-------------------------------###-------------------------------###
@@ -70,7 +71,7 @@ theme_plot <- theme_bw() +
 ###   Calling functions
 ###-------------------------------
 
-# source("functions.R")
+source(paste0(directory, "utils\\", "functions.R"))
 
 ###------------------------------###------------------------------###
 
@@ -78,8 +79,9 @@ theme_plot <- theme_bw() +
 ###   Reading data
 ###-------------------------------
 
-data_long <- read.table(file = "data_growth_long.txt")
-
+data_long <- read.table(file = paste0(data_directory, "data_growth_long.txt"))
+data_long$gender <- data_long$gender - 1
+head(data_long)
 
 ###------------------------------###------------------------------###
 
@@ -96,18 +98,23 @@ lag <- 30
 sample_size <- 2500
 number_iterations <- burn_in + (sample_size)*lag
 
-### JAGS model
-model <- file.path("model_growth_study.R")
-# file.show(model)
+###------------------------------###------------------------------###
 
 ###------------------------------
+###   JAGS specifications
+###------------------------------
+
+### JAGS model
+model <- file.path(paste0(model_directory, "model_growth_study.R"))
+# file.show(model)
+
 
 ### Data for JAGS
 data_jags <- list() # create object
-data_jags$n <- length(unique(data_long$id))
+data_jags$n <- length(unique(data_long$id)) # sample size
 data_jags$J_i <- as.numeric(table(data_long$id)) # number of measurements
 data_jags$W <- data_long$height
-data_jags$N <- sum(data_jags$J_i)
+data_jags$N <- sum(data_jags$J_i) # total number of measurements
 data_jags$id <- data_long$id
 T_max <- max(data_long$age)
 data_jags$index_boys <- unique(data_long$id[which(data_long$gender == 0)])
@@ -115,18 +122,24 @@ data_jags$index_girls <- unique(data_long$id[which(data_long$gender == 1)])
 index_boys_long <- which(data_long$gender == 0)
 index_girls_long <- which(data_long$gender == 1)
 
+###------------------------------###------------------------------###
+
+###------------------------------
+###   Starting loop for different degrees, m varying from 5 to 30
+###------------------------------
+
 for(m in 5:30){
    
    data_jags$m <- m
    
-   results_directory <- paste0(directory, "/results/m", data_jags$m, "/")
+   results_directory <- paste0(directory, "\\results\\m", data_jags$m, "/")
    dir.create(path = results_directory, showWarnings = TRUE)
    
    ###------------------------------
    ###  Bernstein Basis
    ###------------------------------
    
-   data_jags$basis<- BP_Basis(t = data_long$age / T_max, m = data_jags$m)
+   data_jags$basis <- BP_Basis(t = data_long$age / T_max, m = data_jags$m)
    
    ###------------------------------
    ###  Prior specifications
@@ -279,14 +292,16 @@ for(m in 5:30){
          log_likelihood_marg[ll,ss]<- dnorm(x = data_jags$W[ll],
                                             mean = data_jags$basis[ll,] %*%
                                               posterior_sample[ss,names_mu_xi_boys],
-                                            sd = sqrt(posterior_sigma2_e[ss] + aux_marginal_variance[ll,ss] ), log = TRUE)
+                                            sd = sqrt(posterior_sigma2_e[ss] + aux_marginal_variance[ll,ss] ),
+                                            log = TRUE)
       }
       rm(ll)
       for(ll in index_girls_long){
          log_likelihood_marg[ll,ss]<- dnorm(x = data_jags$W[ll],
                                             mean = data_jags$basis[ll,]%*%
                                               posterior_sample[ss,names_mu_xi_girls], 
-                                            sd = sqrt(posterior_sigma2_e[ss] + aux_marginal_variance[ll,ss] ), log = TRUE)
+                                            sd = sqrt(posterior_sigma2_e[ss] + aux_marginal_variance[ll,ss] ),
+                                            log = TRUE)
       }
       rm(ll)
    }
