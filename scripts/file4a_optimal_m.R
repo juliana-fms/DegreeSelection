@@ -15,7 +15,7 @@ rm(list = ls())
 ###   Packages required
 ###--------------------------------
 
-# require(BSDA)
+library(BSDA)
 # require(coda)
 
 ###--------------------------------
@@ -40,8 +40,9 @@ set.seed(123456789)
 ###   equal to 10, min_m should be equal to 10 - 1
 ###--------------------------------
 
-min_m <- 4 ; max_m <- 10
+min_m <- 4 ; max_m <- 7
 S <- 5000
+level <- 0.10
 sample_directory <- "data\\"
 test <- "both"
 
@@ -63,19 +64,15 @@ optimal_m <- function(min_m, max_m, S, dir, level = 0.10, test = NULL){
     names(p_value_test2_wilcox) <-  (min_m + 1):(max_m-1)
   
   opt_m_test1_sign <- opt_m_test1_wilcox <-
-    opt_m_test2_sign <- opt_m_test2_wilcox <-
-    opt_m_test1_sign_girls <- opt_m_test1_wilcox_girls <-
-    opt_m_test2_sign_girls <- opt_m_test2_wilcox_girls <- NULL
+    opt_m_test2_sign <- opt_m_test2_wilcox <- NULL
   
-  D_test1 <- D_test2 <-
-    D_test1_girls <- D_test2_girls <- matrix(data = NA,
-                                             nrow = S,
-                                             ncol = max_m - min_m)
-  colnames(D_test1) <- colnames(D_test2) <- 
-    colnames(D_test1_girls) <- colnames(D_test2_girls) <- (min_m + 1):(max_m)
+  D_test1 <- D_test2 <- matrix(data = NA,
+                               nrow = S,
+                               ncol = max_m - min_m)
+  colnames(D_test1) <- colnames(D_test2) <- (min_m + 1):(max_m)
   
   
-  message("please, wait for a few seconds...")
+  message("program in running ...")
   
   for(m in (min_m+1):max_m){
     
@@ -174,7 +171,6 @@ optimal_m <- function(min_m, max_m, S, dir, level = 0.10, test = NULL){
   opt_m_test2_sign <- as.numeric(names(which(p_value_test2_sign > reference_p_value)[1])) + 1
   opt_m_test2_wilcox <- as.numeric(names(which(p_value_test2_wilcox > reference_p_value)[1])) + 1
   
-  
   if(test == "sign"){
     
     return(list(opt_m_criterion1 = opt_m_test1_sign,
@@ -195,7 +191,7 @@ optimal_m <- function(min_m, max_m, S, dir, level = 0.10, test = NULL){
   
 }
 
-# optimal_m(min_m = 4, max_m = 10, S = 5000, dir = "data\\", level = 0.10, test = "sign")
+optimal_m(min_m = 4, max_m = 12, S = 5000, dir = "data\\", level = 0.10, test = "both")
 
 
 ### Now you can go to file #5 to evaluate probabilities of change in the
